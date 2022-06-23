@@ -41,8 +41,8 @@ buffer2(bufferDim, readPtr2)*hann(ph2)
     ph(f) = os.phasor(1, f); 
     //^ (16.0 ^ hslider("phaseWarping", 0, -1, 1, .001));
 
-    ph1 = min(1.0, ph(rate1) * dim);
-    ph2 = min(1.0, ma.decimal(ph(rate2) + .5) * dim);
+    ph1 = min(1.0, ph(rate) * dim);
+    ph2 = min(1.0, ma.decimal(ph(rate) + .5) * dim);
 
     trigger1 = (ph1 < ph1') + 1 - 1';
     trigger2 = (ph2 < ph2') + 1 - 1';
