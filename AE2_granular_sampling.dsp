@@ -24,19 +24,19 @@ GcntrlLev = hslider("cntrlLev", .5, 0, 1, .001);
 // var1 distance (in meters) between the two farthest removed loudspeakers
 Gvar1 = 3;
 
-grain(seed,var1,timeIndex1,memWriteDel1,cntrlLev,x) = hann(readingSegment) * buffer(bufferSize, readPtr, x)
+grain(seed,var1,timeIndex,memWriteDel,cntrlLev,x) = hann(readingSegment) * buffer(bufferSize, readPtr, x)
     with {
 
         // density
         _grainRate = (cntrlLev*(100-1))+1; 
         // target grain duration in seconds
-        _grainDuration = 0.023 + ((1 - memWriteDel1) / 21); 
+        _grainDuration = 0.023 + ((1 - memWriteDel) / 21); 
         // target grain position in the buffer
-        _grainPosition = ((timeIndex1)+1)/2;
+        _grainPosition = ((timeIndex)+1)/2;
         // make sure to have decorrelated noises
         // grain.dur.jitter: 0.1 - constant value
         durationJitter = primenoise(seed+1) * .1 + .1; 
-        positionJitter = primenoise(seed+2) * (1-memWriteDel1)/100;
+        positionJitter = primenoise(seed+2) * (1-memWriteDel)/100;
 
         // buffer size
         bufferSize = var1*196000;
@@ -83,8 +83,8 @@ grain(seed,var1,timeIndex1,memWriteDel1,cntrlLev,x) = hann(readingSegment) * buf
     };
 
 // par (how much grains/instances do you want?)
-grainN(voices,var1,timeIndex1,memWriteDel1,cntrlLev,x) = 
-    par(i, voices, grain(i,var1,timeIndex1,memWriteDel1,cntrlLev,x));
+grainN(voices,var1,timeIndex,memWriteDel,cntrlLev,x) = 
+    par(i, voices, grain(i,var1,timeIndex,memWriteDel,cntrlLev,x));
     granular_sampling(x) = grainN(4,Gvar1,GtimeIndex1,GmemWriteDel1,GcntrlLev,x) :> (+,+);
 
 process = os.osc(1000) : granular_sampling;
