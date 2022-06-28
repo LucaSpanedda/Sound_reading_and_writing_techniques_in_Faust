@@ -84,7 +84,7 @@ grain(seed,x) = hann(readingSegment) * buffer(bufferSize, readPtr, x)
 
 // par (how much grains/instances do you want?)
 grainN(voices,x) = 
-    par(i, voices, grain(voices,x));
-    granular_sampling(x) = grainN(4,x);
+    par(i, voices, grain(i,x));
+    granular_sampling(x) = grainN(4,x) :> (+,+);
 
-process = _ : granular_sampling;
+process = os.osc(1000) : granular_sampling;
