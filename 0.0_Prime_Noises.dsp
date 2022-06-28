@@ -8,7 +8,7 @@ list =
 };
 
 Noise(seed) = (+(seed)~*(1103515245))/(2147483647.0);
-Multinoise(outs) = par(i,outs,Noise(primesnumbers((outs+i)*243176982)));
+Multinoise(outs) = par(i,outs,Noise((outs+i)*243176982));
 PMultinoise(outs) = par(i,outs,Noise(primesnumbers(outs+i+1000)));
 
 process = PMultinoise(10);
