@@ -21,9 +21,9 @@ with{
     // tableMax = table Max Dimension - 10 Seconds
     tableMax = 192000 * 10 + offset;
     // L = buffer dimension in seconds
-    L = ma.SR * hslider("[3]Table Dimension[unit:Sec]", 1, 1, 10, 1);
+    L = ma.SR * hslider("[2]Table Dimension[unit:Sec]", 1, 1, 10, 1);
     // Write index - ramp 0 to L
-    wIdx = offset + ((+(1) : %(L)) ~ _) * checkbox("[2]Record") : int;
+    wIdx = offset + ((+(1) : %(L)) ~ _) * checkbox("[3]Record") : int;
     buffer(p, x) = it.frwtable(3, tableMax, .0, wIdx, x, p);
     // Hanning window Equation
     hann(x) = sin(ma.frac(x) * ma.PI) ^ 2.0;
