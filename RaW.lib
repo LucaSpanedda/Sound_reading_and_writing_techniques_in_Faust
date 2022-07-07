@@ -1,0 +1,28 @@
+// FAUST standard library
+import("stdfaust.lib");
+// THIS library
+RaW = library("RaW.lib");
+
+// Binary Selector - 0 = out1, 1 = out2
+Selector(sel,x,y) = (x*(1-sel)+y*(sel)); 
+
+// Sample and Hold Circuit:  Sig --> circuit(control signal for trigger)
+SAH(trig,x) = loop
+    with{
+        loop = ((_,x) : Selector(trig))~_
+        with{
+            Selector(sel) = (_*(1-sel)+_*(sel)); 
+        };
+    };
+    
+// Sample and Hold Function
+SAH2(trig,x) = loop~_
+    with{
+        loop(y) = (y,x : select2(trig));
+    };
+
+// Phasor Function
+LetrecPhasor(f) = Xn
+    letrec{
+        'Xn = (Xn+(f/ma.SR))-int(Xn);
+        };
