@@ -79,7 +79,7 @@ grain(seed,var1,timeIndex,memWriteDel,cntrlLev,x) =
 
         // decorrelation delay
         noisePadding = hslider("decorrelation", 1, 0, 1, .001) * lock(noise(seed+3)) : abs;
-            vdelay(x) = x : de.fdelay2(ma.SR, noisePadding * ma.SR);
+            vdelay(x) = x : de.sdelay(ma.SR, 1024, noisePadding * ma.SR);
 
         // read pointer
         readPtr = grainPosition * bufferSize + readingSegment 
@@ -97,4 +97,4 @@ grainN(voices,var1,timeIndex,memWriteDel,cntrlLev,x) =
         // Granular Sampling OUT
         granular_sampling(x) = grainN(4,Gvar1,GtimeIndex1,GmemWriteDel1,GcntrlLev,x);
 
-process = os.osc(1000) : granular_sampling;
+process = os.osc(1000) : granular_sampling :> (+,+);
