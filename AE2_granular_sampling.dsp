@@ -78,7 +78,7 @@ grain(seed,var1,timeIndex,memWriteDel,cntrlLev,x) =
         readingSegment = min(1.0, phasor * phasorSlopeFactor);
 
         // decorrelation delay
-        noisePadding = hslider("padding", 1, 0, 1, .001) * lock(noise(seed+3)) : abs;
+        noisePadding = hslider("decorrelation", 1, 0, 1, .001) * lock(noise(seed+3)) : abs;
             vdelay(x) = x : de.fdelay2(ma.SR, noisePadding * ma.SR);
 
         // read pointer
