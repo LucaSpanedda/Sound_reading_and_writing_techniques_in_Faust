@@ -83,7 +83,7 @@ grain(seed,buffersize,position,posjitter,duration,durjitter,density,x) =
 
         // decorrelation delay
         noisePadding = hslider("decorrelation", 1, 0, 1, .001) * lock(noise(seed+3)) : abs;
-            vdelay(x) = x : de.fdelay2(ma.SR, noisePadding * ma.SR);
+            vdelay(x) = x : de.sdelay(ma.SR, 1024, noisePadding * ma.SR);
 
         // read pointer
         readPtr = grainPosition * bufferSize + readingSegment 
