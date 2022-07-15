@@ -24,7 +24,8 @@ GcntrlLev = hslider("cntrlLev", .5, 0, 1, .001);
 // var1 distance (in meters) between the two farthest removed loudspeakers
 Gvar1 = 3;
 
-grain(seed,var1,timeIndex,memWriteDel,cntrlLev,x) = hann(readingSegment) * buffer(bufferSize, readPtr, x)
+grain(seed,var1,timeIndex,memWriteDel,cntrlLev,x) = 
+    (hann(readingSegment) * buffer(bufferSize, readPtr, x)) : vdelay
     with {
 
         // density
@@ -74,6 +75,9 @@ grain(seed,var1,timeIndex,memWriteDel,cntrlLev,x) = hann(readingSegment) * buffe
 
 
         readingSegment = min(1.0, phasor * phasorSlopeFactor);
+        noisePadding = hslider("padding", 1, 0, 1, .001) * lock(primenoise(seed+3)):abs;
+        vdelay(x) = x : de.fdelay2(ma.SR, noisePadding * ma.SR);
+
         // read pointer
         readPtr = grainPosition * bufferSize + readingSegment * (ma.SR / (grainRate * phasorSlopeFactor));
         buffer(length, readPtr, x) = it.frwtable(5, 1920000, .0, writePtr, x, readPtr)
@@ -87,4 +91,4 @@ grainN(voices,var1,timeIndex,memWriteDel,cntrlLev,x) =
     par(i, voices, grain(i,var1,timeIndex,memWriteDel,cntrlLev,x));
     granular_sampling(x) = grainN(4,Gvar1,GtimeIndex1,GmemWriteDel1,GcntrlLev,x);
 
-process = os.osc(1000) : granular_sampling;
+process = os.osc(1000)*0.2 : granular_sampling;
