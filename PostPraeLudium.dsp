@@ -5,7 +5,7 @@ declare copyright "(c)Luca Spanedda 2022";
 // import standard Faust library
 import("stdfaust.lib");
 
-//-------------------------------------------------------- PRIMES --------------
+
 // Prime Numbers List
 primes =
 (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
@@ -107,22 +107,29 @@ primes =
 10433, 10453, 10457, 10459, 10463, 10477, 10487, 10499, 10501, 10513, 10529,
 10531, 10559, 10567, 10589, 10597, 10601, 10607, 10613, 10627, 10631, 10639,
 10651, 10657, 10663, 10667);
-
 // index of the primes numbers
 primeNumbers(index) = ba.take(index , list)
     with{
         list = primes;
         }; 
 
+Gain = hslider("[1] Network Input",0,0,1,.001) : si.smoo;
+DirGain = hslider("[0] Direct Sound",0,0,1,.001) : si.smoo;
+DelFeedback = hslider("[4] Delays Feedback",0,0,1,.001) : si.smoo;
+GlobFeedback = hslider("[4] Global Feedback",0,0,1,.001) : si.smoo;
+GlobalOffset = hslider("[2] Minimum delay in sec.",2,0,10,.001) : si.smoo;
+GlobalRange = hslider("[3] Maximum delay in sec. (+ Minimum)",10,0,10,.001) : si.smoo;
+
 noise(seed) = (+(primeNumbers(seed + 1)) ~ *(1103515245)) / 2147483647;
 trig(x) = (x < x');
 phasorFreq(f) = os.phasor(1,f);
 phasor(f) = os.phasor(1,f);
-
 SahNoiseFreq(Freq,Seed) = 
-    abs( noise(Seed) ) : ba.sAndH( phasorFreq(Freq) : trig );
+    abs( noise(Seed) ) : 
+        ba.sAndH( phasorFreq(Freq) : trig );
 SahNoise(Freq,Offset,Range,Seed) = 
-    ( abs(noise(Seed)) * Range : ba.sAndH( phasor(SahNoiseFreq(Freq,Seed+1)) : trig) ) + Offset;
+    ( abs(noise(Seed)) * Range + Offset ) : 
+        ba.sAndH( phasor(SahNoiseFreq(Freq,Seed+1)) : trig);
 
 FBDelay(S,FB,x) = (y) 
 letrec{
@@ -135,18 +142,13 @@ letrec{
 Delbank(voices, offset, range, fb, x) = 
 par( i, voices/2, FBDelay(SahNoise(1,offset,range,i) ,fb ,x * (1/voices) ) ),
 par( i, voices/2, FBDelay(SahNoise(1,offset,range,i+(voices/2)) ,fb ,x * (1/voices) ) );
-
 routeAndSplit(GB,a,b) = (a+b)*GB : fi.dcblocker, a, b;
 MultitapDelay(voices, inGain, directGain, offset, range, fb, globalfb, x) = 
     x * (inGain*2) : 
-        (+ <: Delbank(voices, offset, range, fb) :> (+,+) : routeAndSplit(globalfb)) ~ _
-            : !,_,_;
+        (+ <: Delbank(voices, offset, range, fb) :> (+,+) : 
+            dm.zita_light : routeAndSplit(globalfb)) ~ _  :
+                !,_,_;
 
 
-Gain = hslider("[1] Network Input",0,0,1,.001) : si.smoo;
-DirGain = hslider("[0] Direct Sound",0,0,1,.001) : si.smoo;
-DelFeedback = hslider("[4] Delays Feedback",0,0,1,.001) : si.smoo;
-GlobFeedback = hslider("[4] Global Feedback",0,0,1,.001) : si.smoo;
-GlobalOffset = hslider("[2] Minimum delay in sec.",2,0,10,.001) : si.smoo;
-GlobalRange = hslider("[3] Maximum delay in sec. (+ Minimum)",10,0,12,.001) : si.smoo;
-process = _ <: MultitapDelay(20, Gain, DirGain, GlobalOffset, GlobalRange, DelFeedback, GlobFeedback);
+process = 
+_ <: MultitapDelay(20, Gain, DirGain, GlobalOffset, GlobalRange, DelFeedback, GlobFeedback);
