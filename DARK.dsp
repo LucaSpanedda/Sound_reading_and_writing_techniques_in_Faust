@@ -111,36 +111,38 @@ primeNumbers(index) = ba.take(index , list)
     with{
         list = primes;
         }; 
-SahNoise(Offset,Range,Seed) = 
+SahNoise(Offset,Range,Seed,Tap) = 
     ( abs(noise(Seed)) : ba.sAndH( prgmChange + dirac ) ) * Range + Offset
     with{
         trig(x) = (x - x') > 0;
-        prgmChange = button("Tap") : trig;
+        prgmChange = Tap : trig;
         dirac = (1-1'');
         noise(seed) = (+(primeNumbers(seed + 1)) ~ *(1103515245)) / 2147483647;
         };
-multitapDelay(voices,offset,range,fb,x) = 
-hgroup("Channels Taps", 
-    par( i, voices, 
-        vgroup( "%i", 
-            (vmeter( i, SahNoise(offset,range,i) ), fb, x) : delayline
-        ) 
+multitapDelay(voices,offset,range,fb,tap,x) = 
+hgroup("[0] Delay Taps Times", 
+    par(i, voices, 
+        (vmeter( i, SahNoise(offset,range,i,tap) ), fb, x) : delayline
     )
 )
+
 with{
-    vmeter(i, x) = (x : vbargraph("Delay CH %i[unit:Sec]", 0, 20));
+    vmeter(i, x) = (x : vbargraph(" %i[unit:Sec]", 0, 20));
     hmeter(i, x) = (x : hbargraph("Delay CH %i[unit:Sec]", 0, 20));
     delMax = 20; // 20 Seconds
     delayline(T,FB,x) = ( (_*FB)+x : de.sdelay(ma.SR*delMax, 1024, ma.SR*T) )~_ ;
 };
+    GD = hslider("[2] Delay Inputs",0,0,1,.001) : si.smoo;
+    G = hslider("[1] Direct Input",1,0,1,.001) : si.smoo;
+    Feedback = hslider("[3] Delays Feedback",0,0,1,.001) : si.smoo;
+    Offset = hslider("[4] Min. delay Time[unit:Sec]",4,0,10,.001) : si.smoo;
+    Range = hslider("[5] Max. delay Time + Min.[unit:Sec]",8,1,10,.001) : si.smoo;
+    Tap = button("[0] TAP : Change Delay Times");
+
 process = 
-    (_,Feedback,Offset,Range) : \(x,fb,off,rng).
-        (x*GD : multitapDelay(20,off,rng,fb) :> (_,_), x*G)
+    (_,GUI) : \(x,gd,g,fb,off,rng,tap).
+        (x*gd : multitapDelay(20,off,rng,fb,tap) :> (_,_), x*g)
             : \(A,B,C).(A+C,B+C)
 with{
-    GD = hslider("[1] Delay Inputs",0,0,1,.001) : si.smoo;
-    G = hslider("[0] Direct Input",0,0,1,.001) : si.smoo;
-    Feedback = hslider("[4] Delays Feedback",0,0,1,.001) : si.smoo;
-    Offset = hslider("[2] Min. delay T[unit:Sec]",4,0,10,.001) : si.smoo;
-    Range = hslider("[3] Max. delay T+min[unit:Sec]",8,1,10,.001) : si.smoo;
+    GUI = vgroup("[1] Control Interface",(GD,G,Feedback,Offset,Range,Tap));
 };
