@@ -1,4 +1,4 @@
-declare name "Post Prae Ludium - Multitap Delay";
+declare name "DARK - Multitap Delay";
 declare version "xxx";
 declare author "Luca Spanedda";
 declare copyright "(c)Luca Spanedda 2022";
@@ -112,39 +112,35 @@ primeNumbers(index) = ba.take(index , list)
     with{
         list = primes;
         }; 
-
-Gain = hslider("[1] Network Input",0,0,1,.001) : si.smoo;
-DirGain = hslider("[0] Direct Sound",0,0,1,.001) : si.smoo;
-DelFeedback = hslider("[4] Delays Feedback",0,0,1,.001) : si.smoo;
-GlobFeedback = hslider("[4] Global Feedback",0,0,1,.001) : si.smoo;
-GlobalOffset = hslider("[2] Minimum delay in sec.",4,0,10,.001) : si.smoo;
-GlobalRange = hslider("[3] Maximum delay in sec. (+ Minimum)",8,1,10,.001) : si.smoo;
-
 SahNoise(Offset,Range,Seed) = 
     ( abs(noise(Seed)) : ba.sAndH( prgmChange + dirac ) ) * Range + Offset
     with{
         trig(x) = (x - x') > 0;
-        prgmChange = button("Change Delays Seed") : trig;
+        prgmChange = button("Tap") : trig;
         dirac = (1-1'');
         noise(seed) = (+(primeNumbers(seed + 1)) ~ *(1103515245)) / 2147483647;
         };
-FBDelay(S,FB,x) = (y) 
-letrec{
-        'y = vdel(S, y * FB + x); 
-      }
-        with{
-        vdel(S,x) = x : de.sdelay( ma.SR*20, 1024, ma.SR*S );
-        };
-
-
-Delbank(voices, offset, range, fb, x) = 
-par( i, voices/2, FBDelay(SahNoise(offset,range,i) ,fb ,x * (1/voices) ) ),
-par( i, voices/2, FBDelay(SahNoise(offset,range,i+(voices/2)) ,fb ,x * (1/voices) ) );
-routeAndSplit(GB,a,b) = (a+b)*GB : fi.dcblocker, a, b;
-MultitapDelay(voices, inGain, directGain, offset, range, fb, globalfb, x) = 
-    x * (inGain*2) : 
-        (+ <: Delbank(voices, offset, range, fb) :> (+,+) : routeAndSplit(globalfb)) ~ _
-            : !,_,_;
-
-process = _ <: 
-MultitapDelay(20, Gain, DirGain, GlobalOffset, GlobalRange, DelFeedback, GlobFeedback);
+multitapDelay(voices,offset,range,fb,x) = 
+hgroup("Channels Taps", 
+    par( i, voices, 
+        vgroup( "%i", 
+            (vmeter( i, SahNoise(offset,range,i) ), fb, x) : delayline
+        ) 
+    )
+)
+with{
+    vmeter(i, x) = (x : vbargraph("Delay CH %i[unit:Sec]", 0, 20));
+    hmeter(i, x) = (x : hbargraph("Delay CH %i[unit:Sec]", 0, 20));
+    delMax = 20; // 20 Seconds
+    delayline(T,FB,x) = ( (_*FB)+x : de.sdelay(ma.SR*delMax, 1024, ma.SR*T) )~_ ;
+};
+process = 
+    (_,Feedback,Offset,Range) : \(x,fb,off,rng).
+        (x*GD : multitapDelay(20,off,rng,fb) :> (_,_), x*G)
+with{
+    GD = hslider("[1] Delay Inputs",0,0,1,.001) : si.smoo;
+    G = hslider("[0] Direct Input",0,0,1,.001) : si.smoo;
+    Feedback = hslider("[4] Delays Feedback",0,0,1,.001) : si.smoo;
+    Offset = hslider("[2] Min. delay T[unit:Sec]",4,0,10,.001) : si.smoo;
+    Range = hslider("[3] Max. delay T+min[unit:Sec]",8,1,10,.001) : si.smoo;
+};
