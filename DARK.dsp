@@ -5,7 +5,6 @@ declare copyright "(c)Luca Spanedda 2022";
 // import standard Faust library
 import("stdfaust.lib");
 
-
 // Prime Numbers List
 primes =
 (2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73,
@@ -137,6 +136,7 @@ with{
 process = 
     (_,Feedback,Offset,Range) : \(x,fb,off,rng).
         (x*GD : multitapDelay(20,off,rng,fb) :> (_,_), x*G)
+            : \(A,B,C).(A+C,B+C)
 with{
     GD = hslider("[1] Delay Inputs",0,0,1,.001) : si.smoo;
     G = hslider("[0] Direct Input",0,0,1,.001) : si.smoo;
