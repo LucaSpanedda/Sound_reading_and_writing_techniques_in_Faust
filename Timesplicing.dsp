@@ -22,8 +22,6 @@ primeI(index) = ba.take(index , list)
 decimal(x) = x-int(x); 
 // only integer pass
 integer(x) = int(x);
-// pole inverter
-poleinv(x) = abs(x*-1);
 // binary selector 0 - 1
 selector(sel,x,y) = ( x * (1-sel) + y * (sel) );
 // noise with prime numbers
